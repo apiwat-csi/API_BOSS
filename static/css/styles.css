@@ -282,6 +282,16 @@ select {
   gap: 8px;
 }
 
+.channel-countdown {
+  border-radius: 6px;
+  padding: 2px 6px;
+  color: #111827;
+  background: var(--yellow);
+  font-size: 0.72rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
 .channel-state {
   display: inline-flex;
   align-items: center;

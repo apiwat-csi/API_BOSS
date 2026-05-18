@@ -2,6 +2,7 @@ const state = {
   bosses: [],
   favorites: new Set(JSON.parse(localStorage.getItem("favoriteBosses") || "[]")),
   notified: new Set(),
+  notificationReady: false,
 };
 
 const els = {
@@ -101,6 +102,11 @@ function formatDuration(seconds) {
   return hours > 0 ? `${hours}:${base}` : base;
 }
 
+function rangeCountdownText(channel) {
+  const secondsLeft = channel.nextRegenTo - nowUnix();
+  return secondsLeft > 0 ? formatDuration(secondsLeft) : "00:00";
+}
+
 function countdownText(boss) {
   const now = nowUnix();
   if (boss.nextRegenFrom <= now && now <= boss.nextRegenTo) {
@@ -118,6 +124,7 @@ function channelHtml(channel) {
     <div class="channel-row ${status.className}">
       <div class="channel-title">
         <strong>CH ${escapeHtml(channel.channelNum)}</strong>
+        ${status.key === "soon" ? `<span class="channel-countdown">${rangeCountdownText(channel)}</span>` : ""}
       </div>
       <div class="channel-times">
         <span><span class="time-icon death-icon">×</span>ตาย: ${escapeHtml(timeOnly(channel.lastDie))}</span>
@@ -193,16 +200,34 @@ function render() {
   els.soonCount.textContent = String(bosses.filter((boss) => getStatus(boss).key === "soon").length);
 }
 
+function greenNotificationKey(boss, channel) {
+  return `${boss.kind}:${channel.channelNum}:${channel.lastRegen}`;
+}
+
+function notifyGreenChannels({ silent = false } = {}) {
+  let shouldPlay = false;
+
+  for (const boss of filteredBosses()) {
+    for (const channel of boss.channels) {
+      if (!hasRegenAfterDeath(channel)) continue;
+
+      const key = greenNotificationKey(boss, channel);
+      if (state.notified.has(key)) continue;
+
+      state.notified.add(key);
+      shouldPlay = true;
+    }
+  }
+
+  if (shouldPlay && !silent) {
+    playNotificationSound();
+  }
+}
+
 function tickCountdowns() {
-  for (const boss of state.bosses) {
+  for (const boss of filteredBosses()) {
     const node = document.querySelector(`[data-countdown="${CSS.escape(String(boss.kind))}"]`);
     if (node) node.textContent = countdownText(boss);
-
-    const secondsLeft = boss.nextRegenFrom - nowUnix();
-    if (secondsLeft > 0 && secondsLeft <= 60 && !state.notified.has(String(boss.kind))) {
-      state.notified.add(String(boss.kind));
-      playNotificationSound();
-    }
   }
   render();
 }
@@ -217,6 +242,8 @@ async function loadBosses() {
     state.bosses = payload.data;
     renderFilters();
     render();
+    notifyGreenChannels({ silent: !state.notificationReady });
+    state.notificationReady = true;
     els.lastUpdated.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString("th-TH")}`;
   } catch (error) {
     els.error.textContent = error.message || "เกิดข้อผิดพลาด";
