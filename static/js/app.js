@@ -76,15 +76,20 @@ function hasRegenAfterDeath(row) {
   return parseApiDate(row.lastRegen) > parseApiDate(row.lastDie);
 }
 
+function timeOnly(value) {
+  const match = String(value || "").match(/(\d{2}:\d{2}:\d{2})/);
+  return match ? match[1] : "-";
+}
+
 function getSpawnStatus(row, bossLabel = false) {
   const now = nowUnix();
   if (hasRegenAfterDeath(row)) {
-    return { key: "spawning", label: bossLabel ? "Boss กำลังเกิด" : "เกิด", className: "is-spawning" };
+    return { key: "spawning", icon: "✦", label: bossLabel ? "Boss กำลังเกิด" : "เกิด", className: "is-spawning" };
   }
-  if (row.nextRegenFrom > now && row.nextRegenFrom - now <= 300) {
-    return { key: "soon", label: "ใกล้เกิด", className: "is-soon" };
+  if (now >= row.nextRegenFrom - 300 && now <= row.nextRegenTo) {
+    return { key: "soon", icon: "!", label: "ใกล้เกิด", className: "is-soon" };
   }
-  return { key: "waiting", label: "ตาย", className: "is-waiting" };
+  return { key: "waiting", icon: "×", label: "ตาย", className: "is-waiting" };
 }
 
 function formatDuration(seconds) {
@@ -113,11 +118,11 @@ function channelHtml(channel) {
     <div class="channel-row ${status.className}">
       <div class="channel-title">
         <strong>CH ${escapeHtml(channel.channelNum)}</strong>
-        <span class="channel-state">${status.label}</span>
       </div>
       <div class="channel-times">
-        <span>ตาย: ${escapeHtml(channel.lastDie)}</span>
-        <span>เกิด: ${escapeHtml(channel.lastRegen)}</span>
+        <span><span class="time-icon death-icon">×</span>ตาย: ${escapeHtml(timeOnly(channel.lastDie))}</span>
+        <span><span class="time-icon regen-icon">✦</span>เกิด: ${escapeHtml(timeOnly(channel.lastRegen))}</span>
+        <span><span class="time-icon next-icon">→</span>ถัดไป: ${escapeHtml(timeOnly(channel.nextRegenFromThai))} - ${escapeHtml(timeOnly(channel.nextRegenToThai))}</span>
       </div>
     </div>
   `;

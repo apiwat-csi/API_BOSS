@@ -283,12 +283,32 @@ select {
 }
 
 .channel-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   border-radius: 999px;
   padding: 2px 8px;
   color: #07110b;
   background: var(--channel-color);
   font-size: 0.72rem;
   font-weight: 800;
+}
+
+.state-icon,
+.time-icon {
+  display: inline-grid;
+  place-items: center;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.state-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  color: var(--channel-color);
+  background: rgba(7, 17, 11, 0.86);
+  font-size: 0.68rem;
 }
 
 .channel-times {
@@ -299,10 +319,34 @@ select {
 }
 
 .channel-times span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   overflow: hidden;
   color: rgba(242, 246, 255, 0.76);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.time-icon {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  color: #07110b;
+  font-size: 0.68rem;
+}
+
+.death-icon {
+  background: var(--red);
+}
+
+.regen-icon {
+  background: var(--green);
+}
+
+.next-icon {
+  background: var(--yellow);
 }
 
 .channel-row.is-spawning {
