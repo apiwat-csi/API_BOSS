@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from flask import Blueprint, current_app, jsonify, render_template
 
+from services.config_service import load_client_config
 from services import BossApiError, BossService
 
 
@@ -18,6 +19,11 @@ def get_service() -> BossService:
 @boss_bp.get("/")
 def index():
     return render_template("index.html")
+
+
+@boss_bp.get("/api/config")
+def config():
+    return jsonify({"ok": True, "data": load_client_config(current_app.config["CLIENT_CONFIG_PATH"])})
 
 
 @boss_bp.get("/api/bosses")

@@ -14,6 +14,7 @@ def create_app() -> Flask:
         JSON_AS_ASCII=False,
         BOSS_API_URL=os.getenv("BOSS_API_URL", "https://lunaplus.asia/boss-status/json"),
         BOSS_API_TIMEOUT=float(os.getenv("BOSS_API_TIMEOUT", "8")),
+        CLIENT_CONFIG_PATH=os.getenv("CLIENT_CONFIG_PATH", "config.json"),
         DISCORD_WEBHOOK_URL=os.getenv("DISCORD_WEBHOOK_URL", ""),
     )
 

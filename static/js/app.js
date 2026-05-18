@@ -3,6 +3,12 @@ const state = {
   favorites: new Set(JSON.parse(localStorage.getItem("favoriteBosses") || "[]")),
   notified: new Set(),
   notificationReady: false,
+  refreshTimer: null,
+};
+
+const appConfig = {
+  apiRefreshSeconds: 10,
+  soonBeforeSeconds: 300,
 };
 
 const els = {
@@ -87,7 +93,7 @@ function getSpawnStatus(row, bossLabel = false) {
   if (hasRegenAfterDeath(row)) {
     return { key: "spawning", icon: "✦", label: bossLabel ? "Boss กำลังเกิด" : "เกิด", className: "is-spawning" };
   }
-  if (now >= row.nextRegenFrom - 300 && now <= row.nextRegenTo) {
+  if (now >= row.nextRegenFrom - appConfig.soonBeforeSeconds && now <= row.nextRegenTo) {
     return { key: "soon", icon: "!", label: "ใกล้เกิด", className: "is-soon" };
   }
   return { key: "waiting", icon: "×", label: "ตาย", className: "is-waiting" };
@@ -253,6 +259,26 @@ async function loadBosses() {
   }
 }
 
+async function loadConfig() {
+  try {
+    const response = await fetch("/api/config", { headers: { Accept: "application/json" } });
+    const payload = await response.json();
+    if (!response.ok || !payload.ok) throw new Error("โหลด config ไม่สำเร็จ");
+
+    appConfig.apiRefreshSeconds = Number(payload.data.apiRefreshSeconds || appConfig.apiRefreshSeconds);
+    appConfig.soonBeforeSeconds = Number(payload.data.soonBeforeSeconds || appConfig.soonBeforeSeconds);
+  } catch (error) {
+    console.warn(error.message || "โหลด config ไม่สำเร็จ ใช้ค่า default");
+  }
+}
+
+async function bootstrap() {
+  await loadConfig();
+  await loadBosses();
+  state.refreshTimer = setInterval(loadBosses, appConfig.apiRefreshSeconds * 1000);
+  setInterval(tickCountdowns, 1_000);
+}
+
 els.refresh.addEventListener("click", loadBosses);
 els.search.addEventListener("input", render);
 els.kind?.addEventListener("input", render);
@@ -268,6 +294,4 @@ els.list.addEventListener("click", (event) => {
   render();
 });
 
-loadBosses();
-setInterval(loadBosses, 30_000);
-setInterval(tickCountdowns, 1_000);
+bootstrap();

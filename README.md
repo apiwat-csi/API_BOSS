@@ -8,7 +8,7 @@
 - แสดงข้อมูล Boss และ Channel
 - แปลง Unix timestamp เป็นเวลาไทย `Asia/Bangkok`
 - Countdown realtime ทุก 1 วินาที
-- Auto refresh ทุก 30 วินาที
+- Auto refresh ทุก 10 วินาที
 - Search ชื่อ Boss และชื่อแผนที่
 - Filter ด้วย `category` และ `mapName`
 - เรียง Boss ที่ใกล้เกิดที่สุดก่อน
@@ -32,11 +32,23 @@ python app.py
 
 เปิดเว็บที่ `http://localhost:5000`
 
+## Config
+
+แก้เวลาที่ `config.json` แล้ว refresh หน้าเว็บได้เลย ไม่ต้อง deploy ใหม่
+
+```json
+{
+  "apiRefreshSeconds": 10,
+  "soonBeforeSeconds": 300
+}
+```
+
 ## Environment Variables
 
 ```bash
 BOSS_API_URL=https://lunaplus.asia/boss-status/json
 BOSS_API_TIMEOUT=8
+CLIENT_CONFIG_PATH=config.json
 PORT=5000
 LOG_LEVEL=INFO
 DISCORD_WEBHOOK_URL=
