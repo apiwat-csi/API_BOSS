@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="app-shell">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Luna Plus Thailand</p>
+      <h1>Boss Spawn Tracker</h1>
+    </div>
+    <div class="refresh-panel">
+      <span id="last-updated">ยังไม่ได้โหลดข้อมูล</span>
+      <button id="refresh-button" type="button">รีเฟรช</button>
+    </div>
+  </header>
+
+  <section class="controls" aria-label="ค้นหาและกรองข้อมูล">
+    <label>
+      <span>ค้นหา</span>
+      <input id="search-input" type="search" placeholder="ชื่อบอสหรือแผนที่">
+    </label>
+    <label>
+      <span>Kind</span>
+      <input id="kind-filter" type="search" value="1229,1240,1241" placeholder="เช่น 83,393">
+    </label>
+    <label>
+      <span>ประเภท</span>
+      <select id="category-filter">
+        <option value="">ทุกประเภท</option>
+      </select>
+    </label>
+    <label>
+      <span>แผนที่</span>
+      <select id="map-filter">
+        <option value="">ทุกแผนที่</option>
+      </select>
+    </label>
+  </section>
+
+  <section class="status-strip" aria-live="polite">
+    <div><strong id="boss-count">0</strong><span>Boss ทั้งหมด</span></div>
+    <div><strong id="spawning-count">0</strong><span>กำลังเกิด</span></div>
+    <div><strong id="soon-count">0</strong><span>ใกล้เกิด</span></div>
+  </section>
+
+  <div id="loading" class="loading">
+    <div class="loader"></div>
+    <span>กำลังโหลดข้อมูล Boss...</span>
+  </div>
+
+  <div id="error-box" class="error-box" hidden></div>
+  <section id="boss-list" class="boss-grid" aria-live="polite"></section>
+  <p id="empty-state" class="empty-state" hidden>ไม่พบ Boss ที่ตรงกับเงื่อนไข</p>
+</main>
+{% endblock %}
