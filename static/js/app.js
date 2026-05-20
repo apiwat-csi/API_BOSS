@@ -154,6 +154,7 @@ function bossCardHtml(boss) {
         <span class="badge">${status.label}</span>
       </div>
       <button class="favorite ${favorite ? "is-active" : ""}" type="button" data-favorite="${escapeHtml(boss.kind)}">${favorite ? "ติดตามแล้ว" : "ติดตาม"}</button>
+      <div class="countdown" data-countdown="${escapeHtml(boss.kind)}">${escapeHtml(countdownText(boss))}</div>
       <div class="channel-list">${boss.channels.map(channelHtml).join("")}</div>
     </article>
   `;

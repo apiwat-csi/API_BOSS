@@ -238,10 +238,21 @@ select {
 }
 
 .countdown {
-  margin: 12px 0 4px;
-  color: var(--status-color);
-  font-size: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--countdown-border);
+  border-radius: 8px;
+  margin: 10px 0 8px;
+  padding: 8px 12px;
+  color: var(--countdown-text);
+  background: var(--countdown-bg);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 10px 24px rgba(0, 0, 0, 0.22);
+  font-size: 1.15rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
 }
 
 .channel-list {
@@ -285,8 +296,9 @@ select {
 .channel-countdown {
   border-radius: 6px;
   padding: 2px 6px;
-  color: #111827;
-  background: var(--yellow);
+  color: #fff7cc;
+  background: #4a3400;
+  border: 1px solid rgba(250, 204, 21, 0.7);
   font-size: 0.72rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -369,6 +381,24 @@ select {
 
 .channel-row.is-waiting {
   --channel-color: var(--red);
+}
+
+.boss-card.is-spawning {
+  --countdown-bg: #06391f;
+  --countdown-border: rgba(34, 197, 94, 0.82);
+  --countdown-text: #dcfce7;
+}
+
+.boss-card.is-soon {
+  --countdown-bg: #4a3400;
+  --countdown-border: rgba(250, 204, 21, 0.86);
+  --countdown-text: #fff7cc;
+}
+
+.boss-card.is-waiting {
+  --countdown-bg: #4a1111;
+  --countdown-border: rgba(239, 68, 68, 0.82);
+  --countdown-text: #fee2e2;
 }
 
 .loading,
