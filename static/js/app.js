@@ -113,15 +113,23 @@ function rangeCountdownText(channel) {
   return secondsLeft > 0 ? formatDuration(secondsLeft) : "00:00";
 }
 
+function earliestWaitingChannel(boss) {
+  const now = nowUnix();
+  return boss.channels
+    .filter((channel) => getSpawnStatus(channel).key === "waiting" && channel.nextRegenFrom > now)
+    .sort((a, b) => a.nextRegenFrom - b.nextRegenFrom)[0];
+}
+
 function countdownText(boss) {
   const now = nowUnix();
   if (boss.nextRegenFrom <= now && now <= boss.nextRegenTo) {
     return `กำลังเกิด เหลือช่วงเวลา ${formatDuration(boss.nextRegenTo - now)}`;
   }
-  if (boss.nextRegenFrom > now) {
-    return `เกิดในอีก ${formatDuration(boss.nextRegenFrom - now)}`;
+  const nextWaitingChannel = earliestWaitingChannel(boss);
+  if (nextWaitingChannel) {
+    return `CH ${nextWaitingChannel.channelNum} จะเริ่มนับเวลาเกิดในอีก ${formatDuration(nextWaitingChannel.nextRegenFrom - now)}`;
   }
-  return "หมดช่วงเวลาเกิดแล้ว";
+  return "";
 }
 
 function channelHtml(channel) {
@@ -144,6 +152,7 @@ function channelHtml(channel) {
 function bossCardHtml(boss) {
   const status = getStatus(boss);
   const favorite = state.favorites.has(String(boss.kind));
+  const countdown = countdownText(boss);
   return `
     <article class="boss-card ${status.className}" data-kind="${escapeHtml(boss.kind)}">
       <div class="card-head">
@@ -154,7 +163,7 @@ function bossCardHtml(boss) {
         <span class="badge">${status.label}</span>
       </div>
       <button class="favorite ${favorite ? "is-active" : ""}" type="button" data-favorite="${escapeHtml(boss.kind)}">${favorite ? "ติดตามแล้ว" : "ติดตาม"}</button>
-      <div class="countdown" data-countdown="${escapeHtml(boss.kind)}">${escapeHtml(countdownText(boss))}</div>
+      ${countdown ? `<div class="countdown" data-countdown="${escapeHtml(boss.kind)}">${escapeHtml(countdown)}</div>` : ""}
       <div class="channel-list">${boss.channels.map(channelHtml).join("")}</div>
     </article>
   `;
@@ -202,9 +211,9 @@ function render() {
   const bosses = filteredBosses();
   els.list.innerHTML = bosses.map(bossCardHtml).join("");
   els.empty.hidden = bosses.length > 0;
-  els.bossCount.textContent = String(bosses.length);
-  els.spawningCount.textContent = String(bosses.filter((boss) => getStatus(boss).key === "spawning").length);
-  els.soonCount.textContent = String(bosses.filter((boss) => getStatus(boss).key === "soon").length);
+  if (els.bossCount) els.bossCount.textContent = String(bosses.length);
+  if (els.spawningCount) els.spawningCount.textContent = String(bosses.filter((boss) => getStatus(boss).key === "spawning").length);
+  if (els.soonCount) els.soonCount.textContent = String(bosses.filter((boss) => getStatus(boss).key === "soon").length);
 }
 
 function greenNotificationKey(boss, channel) {

@@ -57,8 +57,8 @@ select {
 
 h1 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 4rem);
-  line-height: 1;
+  font-size: clamp(1.45rem, 3vw, 2.35rem);
+  line-height: 1.08;
 }
 
 .refresh-panel {
@@ -302,6 +302,10 @@ select {
   font-size: 0.72rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
+}
+
+.channel-row span.channel-countdown {
+  color: #fff7cc;
 }
 
 .channel-state {
