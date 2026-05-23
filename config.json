@@ -1,4 +1,4 @@
 {
-  "apiRefreshSeconds": 5,
+  "apiRefreshSeconds": 2,
   "soonBeforeSeconds": 10
 }

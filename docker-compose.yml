@@ -1,0 +1,33 @@
+services:
+  api_boss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api_boss
+    ports:
+      - "5201:5000"
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      BOSS_API_URL: ${BOSS_API_URL:-https://lunaplus.asia/boss-status/json}
+      BOSS_API_TIMEOUT: ${BOSS_API_TIMEOUT:-8}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - warp_data:/var/lib/cloudflare-warp
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared_tunnel
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - api_boss
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  warp_data:
