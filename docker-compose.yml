@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     image: luna-api_boss
+    ports:
+      - "5021:5000"
     expose:
       - "5000"
     cap_add:
@@ -28,6 +30,8 @@ services:
       context: .
       dockerfile: Dockerfile
     image: luna-api_boss
+    ports:
+      - "5022:5000"
     expose:
       - "5000"
     cap_add:
@@ -49,9 +53,11 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: api_boss_lb
+    container_name: nginx_api_boss_lb
+    expose:
+      - "80"
     ports:
-      - "5201:80"
+      - "5220:80"
     volumes:
       - type: bind
         source: ./nginx.conf
