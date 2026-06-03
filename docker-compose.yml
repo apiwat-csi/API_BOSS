@@ -57,7 +57,7 @@ services:
     expose:
       - "80"
     ports:
-      - "5220:80"
+      - "5201:80"
     volumes:
       - type: bind
         source: ./nginx.conf
