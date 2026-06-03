@@ -1,22 +1,67 @@
 services:
-  api_boss:
+  api_boss1:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: api_boss
-    ports:
-      - "5201:5000"
+    image: luna-api_boss
+    expose:
+      - "5000"
     cap_add:
       - NET_ADMIN
+      - SYS_ADMIN
     devices:
       - /dev/net/tun:/dev/net/tun
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
     environment:
       BOSS_API_URL: ${BOSS_API_URL:-https://lunaplus.asia/boss-status/json}
       BOSS_API_TIMEOUT: ${BOSS_API_TIMEOUT:-8}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
-      - warp_data:/var/lib/cloudflare-warp
+      - warp_data1:/var/lib/cloudflare-warp
+    restart: unless-stopped
+
+  api_boss2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: luna-api_boss
+    expose:
+      - "5000"
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+    environment:
+      BOSS_API_URL: ${BOSS_API_URL:-https://lunaplus.asia/boss-status/json}
+      BOSS_API_TIMEOUT: ${BOSS_API_TIMEOUT:-8}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - warp_data2:/var/lib/cloudflare-warp
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: api_boss_lb
+    ports:
+      - "5201:80"
+    volumes:
+      - type: bind
+        source: ./nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+        bind:
+          create_host_path: false
+    depends_on:
+      - api_boss1
+      - api_boss2
     restart: unless-stopped
 
   cloudflared:
@@ -24,10 +69,9 @@ services:
     container_name: cloudflared_tunnel
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
-      - api_boss
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - nginx
     restart: unless-stopped
 
 volumes:
-  warp_data:
+  warp_data1:
+  warp_data2:
