@@ -39,7 +39,8 @@ python app.py
 ```json
 {
   "apiRefreshSeconds": 10,
-  "soonBeforeSeconds": 300
+  "soonBeforeSeconds": 300,
+  "defaultKindFilter": "1240,1241,1246"
 }
 ```
 
