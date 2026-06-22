@@ -11,10 +11,11 @@ logger = logging.getLogger(__name__)
 DEFAULT_CLIENT_CONFIG = {
     "apiRefreshSeconds": 10,
     "soonBeforeSeconds": 300,
+    "defaultKindFilter": "1240,1241,1246",
 }
 
 
-def load_client_config(config_path: str | Path) -> dict[str, int]:
+def load_client_config(config_path: str | Path) -> dict[str, int | str]:
     path = Path(config_path)
     config = DEFAULT_CLIENT_CONFIG.copy()
 
@@ -28,6 +29,11 @@ def load_client_config(config_path: str | Path) -> dict[str, int]:
         return config
 
     for key, default_value in DEFAULT_CLIENT_CONFIG.items():
+        if isinstance(default_value, str):
+            value = raw.get(key, default_value)
+            config[key] = str(value).strip() or default_value
+            continue
+
         value = raw.get(key, default_value)
         try:
             parsed = int(value)

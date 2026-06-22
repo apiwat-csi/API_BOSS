@@ -9,10 +9,12 @@ const state = {
 const appConfig = {
   apiRefreshSeconds: 10,
   soonBeforeSeconds: 300,
+  defaultKindFilter: "1240,1241,1246",
 };
 
 const els = {
   list: document.querySelector("#boss-list"),
+  results: document.querySelector(".results-panel"),
   loading: document.querySelector("#loading"),
   error: document.querySelector("#error-box"),
   empty: document.querySelector("#empty-state"),
@@ -26,11 +28,6 @@ const els = {
   spawningCount: document.querySelector("#spawning-count"),
   soonCount: document.querySelector("#soon-count"),
 };
-
-const DEFAULT_KIND_FILTER = "1229,1240,1241";
-if (els.kind && !els.kind.value.trim()) {
-  els.kind.value = DEFAULT_KIND_FILTER;
-}
 
 let audioContext;
 
@@ -250,6 +247,7 @@ function tickCountdowns() {
 
 async function loadBosses() {
   els.loading.hidden = false;
+  els.results?.setAttribute("aria-busy", "true");
   els.error.hidden = true;
   try {
     const response = await fetch("/api/bosses", { headers: { Accept: "application/json" } });
@@ -266,6 +264,7 @@ async function loadBosses() {
     els.error.hidden = false;
   } finally {
     els.loading.hidden = true;
+    els.results?.setAttribute("aria-busy", "false");
   }
 }
 
@@ -277,8 +276,13 @@ async function loadConfig() {
 
     appConfig.apiRefreshSeconds = Number(payload.data.apiRefreshSeconds || appConfig.apiRefreshSeconds);
     appConfig.soonBeforeSeconds = Number(payload.data.soonBeforeSeconds || appConfig.soonBeforeSeconds);
+    appConfig.defaultKindFilter = String(payload.data.defaultKindFilter || appConfig.defaultKindFilter).trim();
   } catch (error) {
     console.warn(error.message || "โหลด config ไม่สำเร็จ ใช้ค่า default");
+  } finally {
+    if (els.kind && !els.kind.value.trim()) {
+      els.kind.value = appConfig.defaultKindFilter;
+    }
   }
 }
 

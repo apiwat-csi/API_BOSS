@@ -1,4 +1,5 @@
 {
-  "apiRefreshSeconds": 1,
-  "soonBeforeSeconds": 10
+  "apiRefreshSeconds": 3,
+  "soonBeforeSeconds": 10,
+  "defaultKindFilter": "1240,1241,1246"
 }

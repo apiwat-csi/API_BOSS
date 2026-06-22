@@ -142,10 +142,16 @@ select {
   color: var(--muted);
 }
 
+.results-panel {
+  position: relative;
+  min-height: 220px;
+}
+
 .boss-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
+  min-height: 220px;
 }
 
 .boss-card {
@@ -415,10 +421,17 @@ select {
 }
 
 .loading {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
+  min-height: 72px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
 }
 
 .loading[hidden] {
