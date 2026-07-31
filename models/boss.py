@@ -32,8 +32,11 @@ class Channel:
     lastRegen: str
     nextRegenFrom: int
     nextRegenTo: int
+    nextRegenDate: str
     nextRegenFromThai: str
     nextRegenToThai: str
+    totalDeath: int
+    mapName: str
 
     @classmethod
     def from_api(cls, payload: dict[str, Any]) -> "Channel":
@@ -45,8 +48,11 @@ class Channel:
             lastRegen=str(payload.get("lastRegen") or "-"),
             nextRegenFrom=next_from,
             nextRegenTo=next_to,
+            nextRegenDate=str(payload.get("nextRegenDate") or ""),
             nextRegenFromThai=timestamp_to_bangkok(next_from),
             nextRegenToThai=timestamp_to_bangkok(next_to),
+            totalDeath=safe_int(payload.get("totalDeath")),
+            mapName=str(payload.get("mapName") or "-"),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,8 +62,11 @@ class Channel:
             "lastRegen": self.lastRegen,
             "nextRegenFrom": self.nextRegenFrom,
             "nextRegenTo": self.nextRegenTo,
+            "nextRegenDate": self.nextRegenDate,
             "nextRegenFromThai": self.nextRegenFromThai,
             "nextRegenToThai": self.nextRegenToThai,
+            "totalDeath": self.totalDeath,
+            "mapName": self.mapName,
         }
 
 
@@ -72,6 +81,7 @@ class Boss:
     lastRegen: str
     nextRegenFrom: int
     nextRegenTo: int
+    nextRegenDate: str
     nextRegenFromThai: str
     nextRegenToThai: str
     totalDeath: int
@@ -93,6 +103,7 @@ class Boss:
             lastRegen=str(payload.get("lastRegen") or "-"),
             nextRegenFrom=next_from,
             nextRegenTo=next_to,
+            nextRegenDate=str(payload.get("nextRegenDate") or ""),
             nextRegenFromThai=timestamp_to_bangkok(next_from),
             nextRegenToThai=timestamp_to_bangkok(next_to),
             totalDeath=safe_int(payload.get("totalDeath")),
@@ -110,6 +121,7 @@ class Boss:
             "lastRegen": self.lastRegen,
             "nextRegenFrom": self.nextRegenFrom,
             "nextRegenTo": self.nextRegenTo,
+            "nextRegenDate": self.nextRegenDate,
             "nextRegenFromThai": self.nextRegenFromThai,
             "nextRegenToThai": self.nextRegenToThai,
             "totalDeath": self.totalDeath,

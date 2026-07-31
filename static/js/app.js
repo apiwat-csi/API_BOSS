@@ -1,10 +1,13 @@
 const state = {
   bosses: [],
   favorites: new Set(JSON.parse(localStorage.getItem("favoriteBosses") || "[]")),
+  expandedWorldBossKinds: new Set(),
   notified: new Set(),
   notificationReady: false,
   refreshTimer: null,
 };
+
+const TARGET_WORLD_BOSS_KINDS = [261, 267, 280];
 
 const appConfig = {
   apiRefreshSeconds: 10,
@@ -13,11 +16,15 @@ const appConfig = {
 };
 
 const els = {
+  tabs: document.querySelectorAll("[data-tab-target]"),
+  tabPanels: document.querySelectorAll("[data-tab-panel]"),
   list: document.querySelector("#boss-list"),
   results: document.querySelector(".results-panel"),
   loading: document.querySelector("#loading"),
   error: document.querySelector("#error-box"),
   empty: document.querySelector("#empty-state"),
+  worldBossTable: document.querySelector("#world-boss-table-container"),
+  worldBossEmpty: document.querySelector("#world-boss-empty"),
   search: document.querySelector("#search-input"),
   kind: document.querySelector("#kind-filter"),
   category: document.querySelector("#category-filter"),
@@ -129,6 +136,261 @@ function countdownText(boss) {
   return "";
 }
 
+function clearNode(node) {
+  while (node?.firstChild) node.removeChild(node.firstChild);
+}
+
+function appendTextCell(row, text, className = "", label = "") {
+  const cell = document.createElement("td");
+  if (className) cell.className = className;
+  if (label) cell.dataset.label = label;
+  cell.textContent = text;
+  row.appendChild(cell);
+  return cell;
+}
+
+function appendHeaderCell(row, text) {
+  const cell = document.createElement("th");
+  cell.scope = "col";
+  cell.textContent = text;
+  row.appendChild(cell);
+  return cell;
+}
+
+function formatDateTime(value) {
+  if (value === null || value === undefined || value === "" || value === "-" || value === 0) return "-";
+
+  const raw = String(value).trim();
+  const match = raw.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\.\d+)?$/);
+  return match ? `${match[1]} ${match[2]}` : "-";
+}
+
+function parseBangkokDateToUnix(value) {
+  const formatted = formatDateTime(value);
+  if (formatted === "-") return 0;
+
+  const match = formatted.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
+  if (!match) return 0;
+
+  const [, year, month, day, hour, minute, second] = match.map(Number);
+  return Math.floor(Date.UTC(year, month - 1, day, hour - 7, minute, second) / 1000);
+}
+
+function getNextSpawnUnix(row) {
+  const nextByDate = parseBangkokDateToUnix(row.nextRegenDate);
+  if (nextByDate) return nextByDate;
+  return Number(row.nextRegenFrom || 0);
+}
+
+function formatNextSpawn(row) {
+  const nextByDate = formatDateTime(row.nextRegenDate);
+  if (nextByDate !== "-") return nextByDate;
+  return Number(row.nextRegenFrom || 0) ? formatDateTime(row.nextRegenFromThai) : "-";
+}
+
+function getBossStatus(row) {
+  const nextSpawn = getNextSpawnUnix(row);
+  if (!nextSpawn) {
+    return { key: "unknown", label: "No spawn information", className: "is-unknown" };
+  }
+
+  if (nowUnix() < nextSpawn) {
+    return { key: "waiting", label: "Waiting to spawn", className: "is-world-waiting" };
+  }
+
+  return { key: "spawned", label: "Boss may have spawned", className: "is-world-spawned" };
+}
+
+function getCountdown(row) {
+  const nextSpawn = getNextSpawnUnix(row);
+  if (!nextSpawn) return "-";
+
+  const secondsLeft = nextSpawn - nowUnix();
+  if (secondsLeft <= 0) return "Spawn time reached";
+
+  const days = Math.floor(secondsLeft / 86400);
+  const hours = Math.floor((secondsLeft % 86400) / 3600);
+  const minutes = Math.floor((secondsLeft % 3600) / 60);
+  const seconds = secondsLeft % 60;
+  const parts = [];
+
+  if (days) parts.push(`${days} ${days === 1 ? "day" : "days"}`);
+  if (hours) parts.push(`${hours} ${hours === 1 ? "hour" : "hours"}`);
+  if (minutes) parts.push(`${minutes} ${minutes === 1 ? "minute" : "minutes"}`);
+  parts.push(`${seconds} ${seconds === 1 ? "second" : "seconds"}`);
+
+  return parts.join(" ");
+}
+
+function worldBosses() {
+  const kindOrder = new Map(TARGET_WORLD_BOSS_KINDS.map((kind, index) => [kind, index]));
+
+  return state.bosses
+    .filter((boss) => kindOrder.has(Number(boss.kind)))
+    .sort((a, b) => kindOrder.get(Number(a.kind)) - kindOrder.get(Number(b.kind)));
+}
+
+function sortedChannels(boss) {
+  return [...(boss.channels || [])].sort((a, b) => Number(a.channelNum || 0) - Number(b.channelNum || 0));
+}
+
+function channelSummary(boss) {
+  const bossNextSpawn = formatNextSpawn(boss);
+  const channels = sortedChannels(boss).filter((channel) => (
+    bossNextSpawn !== "-" && formatNextSpawn(channel) === bossNextSpawn
+  ));
+  if (!channels.length) return "-";
+  return channels.map((channel) => `CH ${channel.channelNum}`).join(", ");
+}
+
+function createStatusBadge(status) {
+  const badge = document.createElement("span");
+  badge.className = `world-status-badge ${status.className}`;
+  badge.textContent = status.label;
+  return badge;
+}
+
+function createBossRow(boss) {
+  const status = getBossStatus(boss);
+  const row = document.createElement("tr");
+  row.className = `world-boss-row ${status.className}`;
+  row.dataset.kind = String(boss.kind);
+
+  const kindCell = appendTextCell(row, "", "world-kind-cell", "Kind");
+  const kindBadge = document.createElement("span");
+  kindBadge.className = "world-kind-badge";
+  kindBadge.textContent = String(boss.kind);
+  kindCell.appendChild(kindBadge);
+
+  const nameCell = appendTextCell(row, boss.name || "-", "world-boss-name", "บอส");
+  nameCell.title = boss.name || "";
+  appendTextCell(row, boss.mapName || "-", "world-map-cell", "แผนที่");
+  appendTextCell(row, formatNextSpawn(boss), "world-date-cell", "เกิดรอบถัดไป");
+  appendTextCell(row, channelSummary(boss), "world-channel-summary", "Channel");
+
+  const statusCell = appendTextCell(row, "", "", "Status");
+  statusCell.appendChild(createStatusBadge(status));
+  appendTextCell(row, getCountdown(boss), "world-countdown-cell", "Countdown");
+
+  const detailsCell = appendTextCell(row, "", "world-details-cell", "Details");
+  const button = document.createElement("button");
+  const expanded = state.expandedWorldBossKinds.has(String(boss.kind));
+  button.className = "world-details-button";
+  button.type = "button";
+  button.dataset.worldChannels = String(boss.kind);
+  button.setAttribute("aria-expanded", expanded ? "true" : "false");
+  button.textContent = expanded ? "Hide Channels" : "View Channels";
+  detailsCell.appendChild(button);
+
+  return row;
+}
+
+function createChannelDetailsRow(boss) {
+  const row = document.createElement("tr");
+  row.className = "world-channel-details-row";
+  row.dataset.detailsFor = String(boss.kind);
+
+  const cell = document.createElement("td");
+  cell.colSpan = 8;
+  row.appendChild(cell);
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "world-channel-details";
+  cell.appendChild(wrapper);
+
+  const table = document.createElement("table");
+  table.className = "world-channel-table";
+  wrapper.appendChild(table);
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  ["Channel", "Last Death", "Last Spawn", "Next Spawn", "Status", "Countdown", "Total Deaths"].forEach((header) => appendHeaderCell(headerRow, header));
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  table.appendChild(tbody);
+
+  const channels = sortedChannels(boss);
+  if (!channels.length) {
+    const emptyRow = document.createElement("tr");
+    appendTextCell(emptyRow, "No channel information", "world-channel-empty");
+    emptyRow.firstChild.colSpan = 7;
+    tbody.appendChild(emptyRow);
+    return row;
+  }
+
+  channels.forEach((channel) => {
+    const channelStatus = getBossStatus(channel);
+    const channelRow = document.createElement("tr");
+    appendTextCell(channelRow, `CH ${channel.channelNum}`, "", "Channel");
+    appendTextCell(channelRow, formatDateTime(channel.lastDie), "world-date-cell", "Last Death");
+    appendTextCell(channelRow, formatDateTime(channel.lastRegen), "world-date-cell", "Last Spawn");
+    appendTextCell(channelRow, formatNextSpawn(channel), "world-date-cell", "Next Spawn");
+
+    const statusCell = appendTextCell(channelRow, "", "", "Status");
+    statusCell.appendChild(createStatusBadge(channelStatus));
+
+    appendTextCell(channelRow, getCountdown(channel), "world-countdown-cell", "Countdown");
+    appendTextCell(channelRow, String(channel.totalDeath ?? boss.totalDeath ?? 0), "", "Total Deaths");
+    tbody.appendChild(channelRow);
+  });
+
+  return row;
+}
+
+function renderBossStatusTable(bosses) {
+  if (!els.worldBossTable || !els.worldBossEmpty) return;
+
+  clearNode(els.worldBossTable);
+  els.worldBossEmpty.hidden = bosses.length > 0;
+  if (!bosses.length) return;
+
+  const table = document.createElement("table");
+  table.className = "world-boss-table";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  ["Kind", "บอส", "แผนที่", "เกิดรอบถัดไป", "Channel", "Status", "Countdown", "Details"].forEach((header) => appendHeaderCell(headerRow, header));
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  bosses.forEach((boss) => {
+    tbody.appendChild(createBossRow(boss));
+    if (state.expandedWorldBossKinds.has(String(boss.kind))) {
+      tbody.appendChild(createChannelDetailsRow(boss));
+    }
+  });
+  table.appendChild(tbody);
+  els.worldBossTable.appendChild(table);
+}
+
+function toggleChannelDetails(kind) {
+  const key = String(kind);
+  if (state.expandedWorldBossKinds.has(key)) state.expandedWorldBossKinds.delete(key);
+  else state.expandedWorldBossKinds.add(key);
+  renderBossStatusTable(worldBosses());
+}
+
+function updateCountdowns() {
+  renderBossStatusTable(worldBosses());
+}
+
+function activateTab(tabName) {
+  els.tabs.forEach((tab) => {
+    const isActive = tab.dataset.tabTarget === tabName;
+    tab.classList.toggle("is-active", isActive);
+    tab.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  els.tabPanels.forEach((panel) => {
+    const isActive = panel.dataset.tabPanel === tabName;
+    panel.classList.toggle("is-active", isActive);
+    panel.hidden = !isActive;
+  });
+}
+
 function channelHtml(channel) {
   const status = getSpawnStatus(channel);
   return `
@@ -211,6 +473,7 @@ function render() {
   if (els.bossCount) els.bossCount.textContent = String(bosses.length);
   if (els.spawningCount) els.spawningCount.textContent = String(bosses.filter((boss) => getStatus(boss).key === "spawning").length);
   if (els.soonCount) els.soonCount.textContent = String(bosses.filter((boss) => getStatus(boss).key === "soon").length);
+  renderBossStatusTable(worldBosses());
 }
 
 function greenNotificationKey(boss, channel) {
@@ -298,6 +561,9 @@ els.search.addEventListener("input", render);
 els.kind?.addEventListener("input", render);
 els.category.addEventListener("change", render);
 els.map.addEventListener("change", render);
+els.tabs.forEach((tab) => {
+  tab.addEventListener("click", () => activateTab(tab.dataset.tabTarget));
+});
 els.list.addEventListener("click", (event) => {
   const button = event.target.closest("[data-favorite]");
   if (!button) return;
@@ -306,6 +572,11 @@ els.list.addEventListener("click", (event) => {
   else state.favorites.add(id);
   localStorage.setItem("favoriteBosses", JSON.stringify([...state.favorites]));
   render();
+});
+els.worldBossTable?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-world-channels]");
+  if (!button) return;
+  toggleChannelDetails(button.dataset.worldChannels);
 });
 
 bootstrap();

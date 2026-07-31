@@ -9,6 +9,8 @@
   --accent: #60a5fa;
   --green: #22c55e;
   --yellow: #facc15;
+  --orange: #f59e0b;
+  --gray: #6b7280;
   --red: #ef4444;
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.38);
 }
@@ -83,6 +85,37 @@ button:hover {
   background: rgba(37, 99, 235, 0.48);
 }
 
+.app-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab-button {
+  min-height: 44px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 800;
+}
+
+.tab-button:hover,
+.tab-button.is-active {
+  color: var(--text);
+  background: rgba(96, 165, 250, 0.12);
+}
+
+.tab-button.is-active {
+  border-bottom-color: var(--accent);
+}
+
+.tab-panel[hidden] {
+  display: none;
+}
+
 .controls,
 .status-strip,
 .boss-card {
@@ -145,6 +178,165 @@ select {
 .results-panel {
   position: relative;
   min-height: 220px;
+}
+
+.section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.15;
+}
+
+.world-boss-panel,
+.world-boss-table-container {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(19, 24, 36, 0.82);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
+.world-boss-panel {
+  padding: 16px;
+}
+
+.world-boss-table-container {
+  overflow-x: auto;
+  background: rgba(9, 11, 18, 0.34);
+  box-shadow: none;
+}
+
+.world-boss-table,
+.world-channel-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.world-boss-table th,
+.world-boss-table td,
+.world-channel-table th,
+.world-channel-table td {
+  border-bottom: 1px solid rgba(42, 51, 69, 0.82);
+  padding: 12px 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.world-boss-table th,
+.world-channel-table th {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.world-boss-table tbody tr:hover {
+  background: rgba(32, 36, 45, 0.76);
+}
+
+.world-boss-table tbody tr:last-child td,
+.world-channel-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.world-kind-badge,
+.world-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.world-kind-badge {
+  border: 1px solid rgba(96, 165, 250, 0.62);
+  color: #dbeafe;
+  background: rgba(37, 99, 235, 0.28);
+}
+
+.world-status-badge {
+  color: #111827;
+}
+
+.world-status-badge.is-world-waiting {
+  background: var(--orange);
+}
+
+.world-status-badge.is-world-spawned {
+  background: var(--green);
+}
+
+.world-status-badge.is-unknown {
+  color: var(--text);
+  background: var(--gray);
+}
+
+.world-boss-name {
+  min-width: 130px;
+  font-weight: 900;
+}
+
+.world-map-cell {
+  min-width: 120px;
+}
+
+.world-date-cell,
+.world-countdown-cell {
+  font-family: Consolas, "Courier New", monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.world-countdown-cell {
+  color: #fde68a;
+  font-weight: 900;
+}
+
+.world-channel-summary {
+  max-width: 180px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.world-details-button {
+  min-height: 34px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.world-channel-details-row > td {
+  padding: 0;
+  background: rgba(9, 11, 18, 0.52);
+}
+
+.world-channel-details {
+  overflow-x: auto;
+  padding: 12px;
+}
+
+.world-channel-table {
+  min-width: 780px;
+  border: 1px solid rgba(42, 51, 69, 0.82);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(13, 17, 29, 0.94);
+}
+
+.world-channel-empty {
+  color: var(--muted);
+  text-align: center;
 }
 
 .boss-grid {
@@ -474,6 +666,112 @@ select {
   .controls,
   .status-strip {
     grid-template-columns: 1fr;
+  }
+
+  .app-tabs {
+    overflow-x: auto;
+    padding-bottom: 1px;
+  }
+
+  .tab-button {
+    flex: 0 0 auto;
+  }
+
+  .section-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .world-boss-panel {
+    padding: 12px;
+  }
+
+  .world-boss-table-container {
+    overflow-x: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .world-boss-table,
+  .world-boss-table tbody,
+  .world-boss-table tr,
+  .world-boss-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .world-boss-table thead {
+    display: none;
+  }
+
+  .world-boss-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .world-boss-table tbody tr.world-boss-row {
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--row-color);
+    border-radius: 8px;
+    padding: 12px;
+    background: rgba(13, 17, 29, 0.94);
+  }
+
+  .world-boss-row.is-world-waiting {
+    --row-color: var(--orange);
+  }
+
+  .world-boss-row.is-world-spawned {
+    --row-color: var(--green);
+  }
+
+  .world-boss-row.is-unknown {
+    --row-color: var(--gray);
+  }
+
+  .world-boss-table td {
+    display: grid;
+    grid-template-columns: minmax(98px, 36%) 1fr;
+    gap: 10px;
+    border-bottom: 1px solid rgba(42, 51, 69, 0.52);
+    padding: 8px 0;
+  }
+
+  .world-boss-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  .world-boss-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .world-kind-cell,
+  .world-details-cell {
+    align-items: center;
+  }
+
+  .world-channel-details-row {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(9, 11, 18, 0.72);
+  }
+
+  .world-channel-details-row > td {
+    display: block;
+    padding: 0;
+  }
+
+  .world-channel-details-row > td::before {
+    content: none;
+  }
+
+  .world-channel-details {
+    overflow-x: auto;
+    padding: 10px;
   }
 
   .channel-list {
