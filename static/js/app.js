@@ -7,7 +7,7 @@ const state = {
   refreshTimer: null,
 };
 
-const TARGET_WORLD_BOSS_KINDS = [261, 267, 280];
+const TARGET_WORLD_BOSS_KINDS = [261, 267, 280, 721];
 
 const appConfig = {
   apiRefreshSeconds: 10,
